@@ -1,11 +1,12 @@
-Link to Github project: <a href="https://github.com/Violet-Knight/Machine-Learning-Project">https://github.com/Violet-Knight/Machine-Learning-Project</a>
-
 ---
 title: "Machine Learning Project"
 author: "Theodore Littleton"
 date: "February 14, 2016"
 output: html_document
 ---
+
+Link to Github project: <a href="https://github.com/Violet-Knight/Machine-Learning-Project">https://github.com/Violet-Knight/Machine-Learning-Project</a>  
+Link to HTML page: <a href="https://rawgit.com/Violet-Knight/Machine-Learning-Project/master/Machine_Learning_Project.html">https://rawgit.com/Violet-Knight/Machine-Learning-Project/master/Machine_Learning_Project.html</a>
 
 Project goal: Attempt to predict the manner in which the Human Activity Recognition project was carried out.
 
