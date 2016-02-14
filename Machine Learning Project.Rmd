@@ -1,23 +1,31 @@
 ---
 title: "Machine Learning Project"
 author: "Theodore Littleton"
-date: "September 27, 2015"
+date: "February 14, 2016"
 output: html_document
 ---
 
-The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases. 
+Project goal: Attempt to predict the manner in which the Human Activity Recognition project was carried out.
 
-1. Your submission should consist of a link to a Github repo with your R markdown and compiled HTML file describing your analysis. Please constrain the text of the writeup to < 2000 words and the number of figures to be less than 5. It will make it easier for the graders if you submit a repo with a gh-pages branch so the HTML page can be viewed online (and you always want to make it easy on graders :-).
-2. You should also apply your machine learning algorithm to the 20 test cases available in the test data above. Please submit your predictions in appropriate format to the programming assignment for automated grading. See the programming assignment for additional details. 
+I will load the data (already split into training and test sets), clean it, identify what are likely to be relevant variables, train a model, then use it to predict the 'classe' categorical variable for each sample in the test set.
 
-```{r initialization cache=TRUE}
+First, I load the data and set a specific seed:
+<!--
+```{r}
 ## setwd("~/iCloud Drive/Coursera/JHU Data Specialization/8 - Practical Machine Learning/Project/Machine-Learning-Project")
+```
+-->
+
+```{r setup, message=FALSE}
+library(caret)
 pmlTrain <- read.csv("pml-training.csv")
 pmlTest <- read.csv("pml-testing.csv")
 set.seed(1587)
 ```
 
-```{r name=clean}
+Turning to data clean-up, the dataset begins with 133 columns, most of which are unnecessary and will slow computation. In particular, I am uninterested in data that simply summarize other data, many of whose columns are filled with NA entries anyway. Thus I eliminate columns that express the total, kurtosis, average, max, min, etc. I also eliminate the first seven columns, which contain data which appear to be identifiers or time-dependent, many of which will be spuriously correlated with the exercise type. I do not want the model determining that an exercise was done a particular way only because it was done, for example, by Carlitos.
+
+```{r clean}
 ## Exclude garbage columns (anything summarizing other columns), and first seven,
 ## which appear to just be identifiers
 
@@ -26,9 +34,52 @@ pmlTrain <- pmlTrain[,-c(1:7, garbage)]
 pmlTest <- pmlTest[,-c(1:7, garbage)]
 ```
 
-```{r}
+I train the model using a random forest algorithm, with five k-folds in order to cross-validate.
+
+```{r meat, cache=TRUE, message=FALSE}
 trainSample <- createDataPartition(y=pmlTrain$classe, p=0.7, list=FALSE)
 pmlTrainSub <- pmlTrain[trainSample,]
 pmlTrainValid <- pmlTrain[-trainSample,]
 
+trControl <- trainControl(method = "repeatedcv",
+                           number = 5,
+                           repeats = 5)
+
+modFit <- train(classe ~ ., method="rf", data=pmlTrainSub, prox=TRUE, trControl=trControl)
 ```
+
+Using a confusion matrix, we can see that the accuracy, sensitivity, and specificity are all extremely high -- at least, using the training data. The out-of-sample error rate should be extremely low, with one minus the accuracy of 0.9927 being a reasonable estimate (though it most likely is an upper bound, given that the model may have been overfit to the training set).
+
+```{r analysis, message=FALSE}
+predictions <- predict(modFit, pmlTrainValid)
+confusionMatrix(predictions, pmlTrainValid$classe)
+```
+
+It appears the the most important variable by a significant margin was the roll of the belt sensor.
+
+```{r plots}
+varImpPlot(modFit$finalModel)
+```
+
+And to generate the predicted categories for the test variables, simply run the prediction function on the test set using the fitted model.
+
+```{r test}
+answers <- predict(modFit, pmlTest)
+
+## answers
+```
+
+<!--
+```{r}
+## setwd("./submissions")
+## pml_write_files = function(x){
+##   n = length(x)
+##   for(i in 1:n){
+##     filename = paste0("problem_id_",i,".txt")
+##     write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+##   }
+## }
+
+## pml_write_files(answers)
+```
+--->
